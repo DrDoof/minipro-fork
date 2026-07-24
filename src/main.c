@@ -1210,6 +1210,15 @@ int parse_options(minipro_handle_t *handle, int argc, char **argv)
 						  &device->spi_clock,
 						  SPI_CLOCK))
 					return EXIT_FAILURE;
+			} else if (!strcasecmp(option, "ovc_level")) {
+				/* T76 over-current trip level: 0 = firmware
+				 * default, 1..9 = 120/150/180/200/220/250/300/
+				 * 350/400 mA. */
+				errno = 0;
+				v = strtoul(value, &p_end, 0);
+				if ((p_end == value) || errno || v > 9)
+					return EXIT_FAILURE;
+				handle->cmdopts->ovc_level = (uint8_t)v;
 			} else
 				return EXIT_FAILURE;
 			break;

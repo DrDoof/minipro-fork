@@ -564,6 +564,32 @@ int t76_begin_transaction(minipro_handle_t *handle)
 		/* Algorithm number */
 		msg[63] = (uint8_t)(device->variant >> 8);
 
+		/* OVC "Vcc Current Imax" level. RE'd from Xgpro_T76: the 0x03
+		 * BEGIN_TRANS command carries the over-current trip level as a
+		 * 16-bit LE word at offset 0x34 (from global 0x7aefe4, set by
+		 * the "Vcc Current Imax" combo). 0 = firmware default; 1..9 =
+		 * 120/150/180/200/220/250/300/350/400 mA. minipro leaves it 0,
+		 * which is too low for in-circuit work (whole-board load on the
+		 * VCC rail trips the default limit). Set it with `-o ovc_level`
+		 * (or the T76_OVC_LEVEL env fallback); the hardware OVC
+		 * protection stays active, just at a higher trip point. */
+		{
+			int lvl = handle->cmdopts->ovc_level;
+			if (!lvl) {
+				const char *e = getenv("T76_OVC_LEVEL");
+				if (e && *e) {
+					lvl = atoi(e);
+					if (lvl < 0)
+						lvl = 0;
+					if (lvl > 9)
+						lvl = 9;
+				}
+			}
+			if (lvl)
+				format_int(&msg[0x34], (uint32_t)lvl, 2,
+					   MP_LITTLE_ENDIAN);
+		}
+
 		/* The T76 BEGIN_TRANS is 128 bytes. Bytes 0x40..0x7f carry a
 		 * chip-class geometry / SPI-setup block that the FPGA requires
 		 * to drive memory access; minipro historically sent only 64

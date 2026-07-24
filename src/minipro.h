@@ -325,6 +325,7 @@ typedef struct cmdopts_s {
 	uint8_t force_erase;
 	uint8_t set_spi_clock;
 	uint8_t set_i2c_addr;
+	uint8_t ovc_level;	/* T76 over-current trip level 0..9 (0 = default) */
 	int filter_fuses;
 	int filter_locks;
 	int filter_uid;
